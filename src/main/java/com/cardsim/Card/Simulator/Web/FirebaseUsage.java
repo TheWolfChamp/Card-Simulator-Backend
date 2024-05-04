@@ -6,9 +6,14 @@ import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -21,14 +26,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import io.github.cdimascio.dotenv.Dotenv;
 
 
 // Path to your 'google-services.json' file
 public class FirebaseUsage {
     private final Firestore database;
+    private final FirebaseApp app;
+    private final Bucket storage;
     public FirebaseUsage() throws IOException {
         Dotenv dotenv = Dotenv.load();
         String firebaseAdmin = dotenv.get("FIREBASE_ADMIN_SDK_FILENAME");
@@ -38,21 +50,92 @@ public class FirebaseUsage {
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
 
-        FirebaseApp.initializeApp(options);
-
+        this.app = FirebaseApp.initializeApp(options);
 
         this.database = FirestoreClient.getFirestore();
+        this.storage = StorageClient.getInstance(this.app).bucket("card-simulator.appspot.com");
     }
 
+    /**
+     * Uploads card data to firebase database.
+     * @param collectionName Name of collection to store the information in
+     * @param cardName What you would like to label the card as
+     * @param cardData Information on the card
+     */
     public void updateCardData(String collectionName, String cardName, Map<String, Object> cardData){
         this.database.collection(collectionName).document(cardName).set(cardData);
     }
 
     /**
+     * Gets the blob containing the information for any given card
+     * Example Run(s):
+     * getCardImageDetails("OP-01 Card Images", "OP01-001")
+     * @param expansionName Name of the expansion pack in storage
+     * @param cardName ID of the card you wish to get the data for
+     * @return Blob containing data about the card.
+     */
+    public Blob getCardImageDetails(String expansionName, String cardName){
+        if(expansionName.contains("JP")){
+            return this.storage.get(expansionName+"/"+cardName+"_JP.png");
+        }
+        else{
+            return this.storage.get(expansionName+"/"+cardName+"_EN.png");
+        }
+    }
+
+    /**
+     * Gets a viewable link for the card image
+     * @param cardDetails Blob containing all the card details
+     * @return Image link to view the image
+     */
+    public String getCardImageViewableLink(Blob cardDetails){
+        // Makes duration for 100 years
+        long duration = 100L * 365 * 24 * 60 * 60;
+        return cardDetails.signUrl(duration, TimeUnit.SECONDS).toString();
+
+    }
+
+    /**
+     * Returns data about a card
+     * Example Run: getCardDetails("Romance Dawn (OP 01)", "OP01-001")
+     * @param expansionName Name of expansion
+     * @param cardName ID of the card
+     * @return Card data
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public Map<String, Object> getCardDetails(String expansionName, String cardName)
+            throws ExecutionException, InterruptedException {
+        return this.database.collection("Romance Dawn (OP 01)")
+                .document("OP01-001").get().get().getData();
+    }
+
+    /**
+     * Returns data about all cards in a collection
+     * Example run: getCollectionDetails("Romance Dawn (OP 01)")
+     * @param expansionName Name of expansion
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public HashMap<String, Map<String, Object>> getCollectionDetails(String expansionName)
+            throws ExecutionException, InterruptedException {
+        Iterator<DocumentReference> iterator = this.database.collection(expansionName)
+                .listDocuments().iterator();
+        HashMap<String, Map<String, Object>> documentList = new HashMap<>();
+        while(iterator.hasNext()) {
+            DocumentSnapshot item = iterator.next().get().get();
+            documentList.put(item.getId(),item.getData());
+        }
+        return documentList;
+
+    }
+
+    /**
      * Takes in the name of a collection, and a JSON name and filepath.
      * Uploads everything in that JSON to the database.
-     * @param collectionName
-     * @param jsonName
+     * @param collectionName Name of collection to store the information in.
+     * @param jsonName Name of JSON file to upload.
      */
     public void uploadJsonToCollection(String collectionName, String jsonName){
         try {
