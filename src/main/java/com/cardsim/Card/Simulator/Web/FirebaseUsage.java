@@ -12,6 +12,9 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.cloud.StorageClient;
 import com.google.gson.Gson;
@@ -35,24 +38,24 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+@RequestMapping("/data")
+@RestController
 // Path to your 'google-services.json' file
 public class FirebaseUsage {
     private final Firestore database;
     private final FirebaseApp app;
+
+    protected final FirebaseAuth auth;
     private final Bucket storage;
-    public FirebaseUsage() throws IOException {
-        Dotenv dotenv = Dotenv.load();
-        String firebaseAdmin = dotenv.get("FIREBASE_ADMIN_SDK_FILENAME");
-        FileInputStream serviceAccount = new FileInputStream(firebaseAdmin);
-
-        FirebaseOptions options = new FirebaseOptions.Builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
-
-        this.app = FirebaseApp.initializeApp(options);
-
+    public FirebaseUsage(FirebaseApp initialApp) throws IOException, FirebaseAuthException {
+        this.app = initialApp;
         this.database = FirestoreClient.getFirestore();
+        this.auth = FirebaseAuth.getInstance();
         this.storage = StorageClient.getInstance(this.app).bucket("card-simulator.appspot.com");
     }
 
@@ -62,6 +65,7 @@ public class FirebaseUsage {
      * @param cardName What you would like to label the card as
      * @param cardData Information on the card
      */
+    @PutMapping("/update")
     public void updateCardData(String collectionName, String cardName, Map<String, Object> cardData){
         this.database.collection(collectionName).document(cardName).set(cardData);
     }
@@ -74,6 +78,7 @@ public class FirebaseUsage {
      * @param cardName ID of the card you wish to get the data for
      * @return Blob containing data about the card.
      */
+    @GetMapping("/image")
     public Blob getCardImageDetails(String expansionName, String cardName){
         if(expansionName.contains("JP")){
             return this.storage.get(expansionName+"/"+cardName+"_JP.png");
@@ -88,6 +93,7 @@ public class FirebaseUsage {
      * @param cardDetails Blob containing all the card details
      * @return Image link to view the image
      */
+    @GetMapping("/imageLink")
     public String getCardImageViewableLink(Blob cardDetails){
         // Makes duration for 100 years
         long duration = 100L * 365 * 24 * 60 * 60;
@@ -104,6 +110,7 @@ public class FirebaseUsage {
      * @throws ExecutionException
      * @throws InterruptedException
      */
+    @GetMapping("/card-details")
     public Map<String, Object> getCardDetails(String expansionName, String cardName)
             throws ExecutionException, InterruptedException {
         return this.database.collection("Romance Dawn (OP 01)")
@@ -118,6 +125,7 @@ public class FirebaseUsage {
      * @throws ExecutionException
      * @throws InterruptedException
      */
+    @GetMapping("/collection-details")
     public HashMap<String, Map<String, Object>> getCollectionDetails(String expansionName)
             throws ExecutionException, InterruptedException {
         Iterator<DocumentReference> iterator = this.database.collection(expansionName)
@@ -137,6 +145,7 @@ public class FirebaseUsage {
      * @param collectionName Name of collection to store the information in.
      * @param jsonName Name of JSON file to upload.
      */
+    @PutMapping("/upload-collection")
     public void uploadJsonToCollection(String collectionName, String jsonName){
         try {
             CollectionReference packRef = this.database.collection(collectionName);
@@ -185,4 +194,5 @@ public class FirebaseUsage {
             throw new RuntimeException(e);
         }
     }
+
 }
