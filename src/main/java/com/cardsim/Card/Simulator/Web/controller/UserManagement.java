@@ -1,17 +1,19 @@
-package com.cardsim.Card.Simulator.Web.Service;
+package com.cardsim.Card.Simulator.Web.controller;
 
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.ExportedUserRecord;
-import com.google.firebase.auth.FirebaseAuth;
+import com.cardsim.Card.Simulator.Web.Service.UserManagementService;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.ListUsersPage;
-import com.google.firebase.auth.UserRecord;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 
 @RequestMapping("/users")
@@ -26,23 +28,29 @@ public class UserManagement {
     }
 
     /**
-     * Creates a new user in the Firebase Auth system.
-     * @param email Email address
-     * @param password Password
-     * @param displayName Display Name (also becomes the Unique Identifier)
+     *
+     * @param registerRequest
+     * @return
      * @throws FirebaseAuthException
      */
     @PutMapping("/registerEmail")
-    public void registerUserEmail(String email, String password, String displayName) throws FirebaseAuthException {
-        this.userService.registerUserEmail(email,password,displayName);
+    public ResponseEntity<Map<String, Object>> registerUserEmail(@RequestBody Map<String, String> registerRequest)
+            throws FirebaseAuthException {
+        String email = registerRequest.get("email");
+        String password = registerRequest.get("password");
+        String displayName = registerRequest.get("displayName");
+
+        Map<String, Object> response = this.userService.registerUserEmail(email, password, displayName);
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Prints all users' Unique Identifier
+     *
      * @throws FirebaseAuthException
      */
-    @GetMapping("/all-users")
-    public void getAllUsers() throws FirebaseAuthException {
-        this.userService.getAllUsers();
+    @GetMapping(value = "/all-users", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Map<String, Object>> getAllUsers() throws FirebaseAuthException {
+        return this.userService.getAllUsers();
     }
 }
