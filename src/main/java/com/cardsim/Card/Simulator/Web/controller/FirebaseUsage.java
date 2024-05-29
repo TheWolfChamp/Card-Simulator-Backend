@@ -3,6 +3,7 @@ import com.cardsim.Card.Simulator.Web.Service.FirebaseService;
 import com.google.cloud.storage.Blob;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -48,8 +49,27 @@ public class FirebaseUsage {
         return this.firebaseService.getCollectionDetails(expansionName);
     }
 
-    @PutMapping("/upload-collection")
-    public void uploadJsonToCollection(@RequestParam String collectionName, @RequestParam String jsonName) {
-        this.firebaseService.uploadJsonToCollection(collectionName, jsonName);
+    @PostMapping("/upload-collection")
+    public ResponseEntity<Map<String, String>> uploadJsonToCollection(@RequestParam String series,
+                                                                      @RequestParam String packName,
+                                                                      @RequestBody String jsonBody) {
+        try {
+            this.firebaseService.uploadJsonToCollection(series, packName, jsonBody);
+            return ResponseEntity.ok(Map.of("status", "Successfully uploaded collection!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/update-image-links")
+    public ResponseEntity<Map<String, String>> updateImageLinks(@RequestParam String databaseCollectionName,
+                                                                     @RequestParam String series,
+                                                                     @RequestParam String storageBucketName) {
+        try {
+            this.firebaseService.updateImageLinks(databaseCollectionName, series, storageBucketName);
+            return ResponseEntity.ok(Map.of("status", "Successfully updated image links!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 }

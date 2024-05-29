@@ -6,6 +6,7 @@ import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.FirebaseApp;
@@ -132,18 +133,18 @@ public class FirebaseService {
     /**
      * Takes in the name of a collection, and a JSON name and filepath.
      * Uploads everything in that JSON to the database.
-     * @param collectionName Name of collection to store the information in.
-     * @param jsonName Name of JSON file to upload.
+     * @param series Name of JSON file to upload.
+     * @param packName Name of collection to store the information in.
+     * @param jsonBody Body containing JSON of the object you want to upload.
      */
-    public void uploadJsonToCollection(String collectionName, String jsonName){
+    public void uploadJsonToCollection(String series, String packName, String jsonBody){
         try {
-            CollectionReference packRef = this.database.collection(collectionName);
-
-            String jsonFilePath = jsonName;
-            String jsonData = new String(Files.readAllBytes(Paths.get(jsonFilePath)));
+            CollectionReference seriesRef = this.database.collection(series);
+            DocumentReference packDocRef = seriesRef.document(packName);
+            CollectionReference packCollectionRef = packDocRef.collection("Cards");
 
             // Parse JSON data
-            JsonElement jsonElement = JsonParser.parseString(jsonData);
+            JsonElement jsonElement = JsonParser.parseString(jsonBody);
             JsonArray jsonArray = jsonElement.getAsJsonArray();
 
             // Iterate through JSON array and send data to Firestore
@@ -154,7 +155,7 @@ public class FirebaseService {
                 Map<String, Object> cardData = new Gson().fromJson(jsonObject, Map.class);
 
                 this.database.runTransaction(transaction -> {
-                    DocumentReference docRef = packRef.document(cardId);
+                    DocumentReference docRef = packCollectionRef.document(cardId);
                     ApiFuture<DocumentSnapshot> future = transaction.get(docRef);
 
                     DocumentSnapshot document = future.get();
@@ -164,11 +165,11 @@ public class FirebaseService {
                         String newCardId = cardId + "_p" + suffix;
 
                         // Keep incrementing suffix until a unique ID is found
-                        while (transaction.get(packRef.document(newCardId)).get().exists()) {
+                        while (transaction.get(packCollectionRef.document(newCardId)).get().exists()) {
                             suffix++;
                             newCardId = cardId + "_p" + suffix;
                         }
-                        docRef = packRef.document(newCardId);
+                        docRef = packCollectionRef.document(newCardId);
 
                         // Update the document with the new ID
                         transaction.set(docRef, cardData);
@@ -179,7 +180,42 @@ public class FirebaseService {
                     return null;
                 }).get(); // Wait for the transaction to complete
             }
-        } catch (IOException | ExecutionException | InterruptedException e) {
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Updates image links of card objects in a particular database from a specific series
+     * @param databaseCollectionName Name of Card Database (Romance-Dawn-OP-01)
+     * @param series Name of Card Game (One Piece)
+     * @param storageBucketName Name of Storage Bucket (OP 01 Card Images)
+     */
+    public void updateImageLinks(String databaseCollectionName, String series, String storageBucketName) {
+        CollectionReference seriesRef = this.database.collection(series);
+        DocumentReference packDocRef = seriesRef.document(databaseCollectionName);
+        CollectionReference packCollectionRef = packDocRef.collection("Cards");
+        try {
+            ApiFuture<QuerySnapshot> querySnapshot = packCollectionRef.get();
+            for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
+                String docId = document.getId();
+
+                // Check if the file exists in Cloud Storage
+                Blob blob = getCardImageDetails(storageBucketName, docId);
+                if (blob != null && blob.exists()) {
+                    // File exists, retrieve it
+                    String urlLink = getCardImageViewableLink(blob);
+                    DocumentReference docRef = packCollectionRef.document(docId);
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("Url-Link", urlLink);
+                    docRef.update(updates).get();
+                    // Process the content as needed
+                    System.out.println("Retrieved file for ID: " + docId);
+                } else {
+                    System.out.println("No file found for ID: " + docId);
+                }
+            }
+        } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
