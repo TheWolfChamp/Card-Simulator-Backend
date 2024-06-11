@@ -21,10 +21,16 @@ public class FirebaseUsage {
         this.firebaseService = firebaseService;
     }
 
-    @PutMapping("/update")
-    public void updateCardData(@RequestParam String collectionName, @RequestParam String cardName,
-                               @RequestBody Map<String, Object> cardData) {
-        this.firebaseService.updateCardData(collectionName, cardName, cardData);
+    @PutMapping("/updateCard")
+    public void updateCardData(@RequestParam String series, @RequestParam String collectionName,
+                               @RequestParam String cardName, @RequestBody Map<String, Object> cardData) {
+        this.firebaseService.updateCardData(series, collectionName, cardName, cardData);
+    }
+
+    @PutMapping("/updateSet")
+    public void updateSetData(@RequestParam String series, @RequestParam String collectionName,
+                               @RequestParam String keyValue, @RequestBody Map<String, Object> metadata) {
+        this.firebaseService.updateSetData(series, collectionName, keyValue, metadata);
     }
 
     @GetMapping("/image")
@@ -38,15 +44,18 @@ public class FirebaseUsage {
     }
 
     @GetMapping(value = "/card-details", produces = MediaType.APPLICATION_JSON_VALUE)
-    public HashMap<String, Object> getCardDetails(@RequestParam String expansionName, @RequestParam String cardName)
+    public HashMap<String, Object> getCardDetails(@RequestParam String series,
+                                                  @RequestParam String expansionName,
+                                                  @RequestParam String cardName)
             throws ExecutionException, InterruptedException {
-        return this.firebaseService.getCardDetails(expansionName, cardName);
+        return this.firebaseService.getCardDetails(series, expansionName, cardName);
     }
 
     @GetMapping(value = "/collection-details", produces = MediaType.APPLICATION_JSON_VALUE)
-    public HashMap<String, Map<String, Object>> getCollectionDetails(@RequestParam String expansionName)
+    public HashMap<String, Map<String, Object>> getCollectionDetails(@RequestParam String series,
+                                                                     @RequestParam String expansionName)
             throws ExecutionException, InterruptedException {
-        return this.firebaseService.getCollectionDetails(expansionName);
+        return this.firebaseService.getCollectionDetails(series, expansionName);
     }
 
     @PostMapping("/upload-collection")

@@ -5,6 +5,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.storage.Blob;
@@ -55,12 +56,28 @@ public class FirebaseService {
 
     /**
      * Uploads card data to firebase database.
-     * @param collectionName Name of collection to store the information in
+     * @param series Name of series the card is from
+     * @param expansionName Name of expansion to store the information in
      * @param cardName What you would like to label the card as
      * @param cardData Information on the card
      */
-    public void updateCardData(String collectionName, String cardName, Map<String, Object> cardData){
-        this.database.collection(collectionName).document(cardName).set(cardData);
+    public void updateCardData(
+            String series, String expansionName, String cardName, Map<String, Object> cardData){
+        this.database.collection(series).document(expansionName).collection("Cards")
+                .document(cardName).set(cardData);
+    }
+
+    /**
+     * Updates the information on a particular set
+     * @param series Name of series the card is from
+     * @param expansionName Name of expansion to store the information in
+     * @param keyValue What value you would like replaced
+     * @param metadata Information on the set
+     */
+    public void updateSetData(
+            String series, String expansionName, String keyValue, Map<String, Object> metadata){
+        this.database.collection(series).document(expansionName).collection("Data")
+                .document(keyValue).set(metadata);
     }
 
     /**
@@ -72,7 +89,10 @@ public class FirebaseService {
      * @return Blob containing data about the card.
      */
     public Blob getCardImageDetails(String expansionName, String cardName){
-        if(expansionName.contains("JP")){
+        if(expansionName.contains("Pokemon")){
+            return this.storage.get(expansionName+"/"+cardName);
+        }
+        else if(expansionName.contains("JP")){
             return this.storage.get(expansionName+"/"+cardName+"_JP.png");
         }
         else{
@@ -95,16 +115,18 @@ public class FirebaseService {
     /**
      * Returns data about a card
      * Example Run: getCardDetails("Romance Dawn (OP 01)", "OP01-001")
+     * @param series Name of series
      * @param expansionName Name of expansion
      * @param cardName ID of the card
      * @return Card data
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public HashMap<String, Object> getCardDetails(String expansionName, String cardName)
+    public HashMap<String, Object> getCardDetails(String series, String expansionName, String cardName)
             throws ExecutionException, InterruptedException {
 
-        return (HashMap<String, Object>) this.database.collection(expansionName)
+        return (HashMap<String, Object>) this.database.collection(series)
+                .document(expansionName).collection("Cards")
                 .document(cardName).get().get().getData();
     }
 
@@ -116,18 +138,18 @@ public class FirebaseService {
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public HashMap<String, Map<String, Object>> getCollectionDetails(String expansionName)
+    public HashMap<String, Map<String, Object>> getCollectionDetails(String series, String expansionName)
             throws ExecutionException, InterruptedException {
 
-        Iterator<DocumentReference> iterator = this.database.collection(expansionName)
-                .listDocuments().iterator();
-        HashMap<String, Map<String, Object>> documentList = new HashMap<>();
-        while (iterator.hasNext()) {
-            DocumentSnapshot item = iterator.next().get().get();
-            documentList.put(item.getId(), item.getData());
+        ApiFuture<QuerySnapshot> querySnapshot = this.database.collection(series).document(expansionName)
+                .collection("Cards")
+                .get();
+        HashMap<String, Map<String, Object>> documents = new HashMap<>();
+        for (DocumentSnapshot doc : querySnapshot.get().getDocuments()) {
+            documents.put(doc.getId(), doc.getData());
         }
-        return documentList;
 
+        return documents;
     }
 
     /**
@@ -151,7 +173,7 @@ public class FirebaseService {
             for (JsonElement element : jsonArray) {
                 JsonObject jsonObject = element.getAsJsonObject();
 
-                String cardId= jsonObject.get("Id").getAsString();
+                String cardId = jsonObject.has("Id") ? jsonObject.get("Id").getAsString() : jsonObject.get("id").getAsString();;
                 Map<String, Object> cardData = new Gson().fromJson(jsonObject, Map.class);
 
                 this.database.runTransaction(transaction -> {
@@ -206,9 +228,15 @@ public class FirebaseService {
                     // File exists, retrieve it
                     String urlLink = getCardImageViewableLink(blob);
                     DocumentReference docRef = packCollectionRef.document(docId);
+
+                    Map<String, Object> deleteUpdate = new HashMap<>();
+                    deleteUpdate.put("images", FieldValue.delete());
+                    docRef.update(deleteUpdate).get();
+
                     Map<String, Object> updates = new HashMap<>();
-                    updates.put("Url-Link", urlLink);
+                    updates.put("Image-Link", urlLink);
                     docRef.update(updates).get();
+
                     // Process the content as needed
                     System.out.println("Retrieved file for ID: " + docId);
                 } else {
