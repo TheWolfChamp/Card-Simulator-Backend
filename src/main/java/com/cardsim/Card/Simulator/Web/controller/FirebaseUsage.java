@@ -21,16 +21,16 @@ public class FirebaseUsage {
         this.firebaseService = firebaseService;
     }
 
-    @PutMapping("/updateCard")
+    @PostMapping("/updateCard")
     public void updateCardData(@RequestParam String series, @RequestParam String collectionName,
                                @RequestParam String cardName, @RequestBody Map<String, Object> cardData) {
         this.firebaseService.updateCardData(series, collectionName, cardName, cardData);
     }
 
-    @PutMapping("/updateSet")
-    public void updateSetData(@RequestParam String series, @RequestParam String collectionName,
-                               @RequestParam String keyValue, @RequestBody Map<String, Object> metadata) {
-        this.firebaseService.updateSetData(series, collectionName, keyValue, metadata);
+    @PostMapping("/updateSet")
+    public void updateSetData(@RequestParam String series, @RequestParam String expansionName,
+                              @RequestBody Map<String, Object> metadata) {
+        this.firebaseService.updateSetData(series, expansionName, metadata);
     }
 
     @GetMapping("/image")

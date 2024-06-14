@@ -23,11 +23,8 @@ import com.google.gson.JsonParser;
 
 import java.io.IOException;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -71,13 +68,11 @@ public class FirebaseService {
      * Updates the information on a particular set
      * @param series Name of series the card is from
      * @param expansionName Name of expansion to store the information in
-     * @param keyValue What value you would like replaced
      * @param metadata Information on the set
      */
     public void updateSetData(
-            String series, String expansionName, String keyValue, Map<String, Object> metadata){
-        this.database.collection(series).document(expansionName).collection("Data")
-                .document(keyValue).set(metadata);
+            String series, String expansionName, Map<String, Object> metadata){
+        this.database.collection(series).document(expansionName).set(metadata);
     }
 
     /**
