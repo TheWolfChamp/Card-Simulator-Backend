@@ -21,16 +21,28 @@ public class FirebaseUsage {
         this.firebaseService = firebaseService;
     }
 
-    @PostMapping("/updateCard")
+    @PostMapping("/update-card")
     public void updateCardData(@RequestParam String series, @RequestParam String collectionName,
                                @RequestParam String cardName, @RequestBody Map<String, Object> cardData) {
         this.firebaseService.updateCardData(series, collectionName, cardName, cardData);
     }
 
-    @PostMapping("/updateSet")
+    @PostMapping("/update-set")
     public void updateSetData(@RequestParam String series, @RequestParam String expansionName,
                               @RequestBody Map<String, Object> metadata) {
         this.firebaseService.updateSetData(series, expansionName, metadata);
+    }
+
+    @PostMapping("/set-card")
+    public void setCardData(@RequestParam String series, @RequestParam String collectionName,
+                               @RequestParam String cardName, @RequestBody Map<String, Object> cardData) {
+        this.firebaseService.setCardData(series, collectionName, cardName, cardData);
+    }
+
+    @PostMapping("/set-set")
+    public void setSetData(@RequestParam String series, @RequestParam String expansionName,
+                              @RequestBody Map<String, Object> metadata) {
+        this.firebaseService.setSetData(series, expansionName, metadata);
     }
 
     @GetMapping("/image")
@@ -38,7 +50,7 @@ public class FirebaseUsage {
         return this.firebaseService.getCardImageDetails(expansionName, cardName);
     }
 
-    @GetMapping("/imageLink")
+    @GetMapping("/image-link")
     public String getCardImageViewableLink(@RequestParam Blob cardDetails) {
         return this.firebaseService.getCardImageViewableLink(cardDetails);
     }
