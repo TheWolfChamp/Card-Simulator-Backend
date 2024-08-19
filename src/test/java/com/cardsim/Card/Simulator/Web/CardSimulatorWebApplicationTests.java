@@ -2,7 +2,7 @@ package com.cardsim.Card.Simulator.Web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.cardsim.Card.Simulator.Web.controller.HomeController;
+import com.cardsim.Card.Simulator.Web.Controllers.HomeController;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

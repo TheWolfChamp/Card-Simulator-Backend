@@ -1,4 +1,4 @@
-package com.cardsim.Card.Simulator.Web.controller;
+package com.cardsim.Card.Simulator.Web.Controllers;
 
 import com.cardsim.Card.Simulator.Web.Service.UserManagementService;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -18,12 +18,12 @@ import java.util.Map;
 
 @RequestMapping("/users")
 @RestController
-public class UserManagement {
+public class UserManagementController {
 
     private final UserManagementService userService;
 
     @Autowired
-    public UserManagement(UserManagementService auth) {
+    public UserManagementController(UserManagementService auth) {
         this.userService = auth;
     }
 

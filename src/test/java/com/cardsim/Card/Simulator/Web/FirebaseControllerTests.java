@@ -1,7 +1,5 @@
 package com.cardsim.Card.Simulator.Web;
 
-import com.cardsim.Card.Simulator.Web.controller.FirebaseUsage;
-import com.cardsim.Card.Simulator.Web.controller.HomeController;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseOptions;
@@ -32,7 +30,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ComponentScan(basePackages = {"com.cardsim.Card.Simulator.Web.controller", "com.cardsim.Card.Simulator.Web.Service"})
-public class FirebaseUsageTests {
+public class FirebaseControllerTests {
 
     @Autowired
     private MockMvc mockMvc;

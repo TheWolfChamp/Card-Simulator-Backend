@@ -1,4 +1,4 @@
-package com.cardsim.Card.Simulator.Web.controller;
+package com.cardsim.Card.Simulator.Web.Controllers;
 import com.cardsim.Card.Simulator.Web.Service.FirebaseService;
 import com.google.cloud.storage.Blob;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +12,12 @@ import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/data")
-public class FirebaseUsage {
+public class FirebaseController {
 
     private final FirebaseService firebaseService;
 
     @Autowired
-    public FirebaseUsage(FirebaseService firebaseService) {
+    public FirebaseController(FirebaseService firebaseService) {
         this.firebaseService = firebaseService;
     }
 

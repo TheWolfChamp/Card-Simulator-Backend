@@ -233,7 +233,7 @@ public class FirebaseService {
     /**
      * Updates image links of card objects in a particular database from a specific series
      * @param databaseCollectionName Name of Card Database (Romance-Dawn-OP-01)
-     * @param series Name of Card Game (One Piece)
+     * @param series Name of Card Game (One-Piece)
      * @param storageBucketName Name of Storage Bucket (OP 01 Card Images)
      */
     public void updateImageLinks(String databaseCollectionName, String series, String storageBucketName) {
@@ -253,7 +253,7 @@ public class FirebaseService {
                     DocumentReference docRef = packCollectionRef.document(docId);
 
                     Map<String, Object> deleteUpdate = new HashMap<>();
-                    deleteUpdate.put("images", FieldValue.delete());
+                    deleteUpdate.put("Url-Link", FieldValue.delete());
                     docRef.update(deleteUpdate).get();
 
                     Map<String, Object> updates = new HashMap<>();

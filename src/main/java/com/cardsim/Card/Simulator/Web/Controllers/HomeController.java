@@ -1,4 +1,4 @@
-package com.cardsim.Card.Simulator.Web.controller;
+package com.cardsim.Card.Simulator.Web.Controllers;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

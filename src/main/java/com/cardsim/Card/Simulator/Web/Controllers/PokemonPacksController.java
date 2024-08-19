@@ -1,4 +1,4 @@
-package com.cardsim.Card.Simulator.Web.controller;
+package com.cardsim.Card.Simulator.Web.Controllers;
 
 import com.cardsim.Card.Simulator.Web.Service.FirebaseService;
 
@@ -13,11 +13,11 @@ import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/packs/pokemon")
-public class PokemonUsage {
+public class PokemonPacksController {
     private final FirebaseService firebaseService;
 
     @Autowired
-    public PokemonUsage(FirebaseService firebaseService) {
+    public PokemonPacksController(FirebaseService firebaseService) {
         this.firebaseService = firebaseService;
     }
 

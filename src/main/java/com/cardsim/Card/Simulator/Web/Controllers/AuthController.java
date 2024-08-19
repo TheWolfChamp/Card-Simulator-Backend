@@ -1,14 +1,9 @@
-package com.cardsim.Card.Simulator.Web.controller;
+package com.cardsim.Card.Simulator.Web.Controllers;
 
 import com.cardsim.Card.Simulator.Web.Service.AuthService;
-import com.cardsim.Card.Simulator.Web.Service.UserManagementService;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.FirebaseToken;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,9 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 @RequestMapping("/auth")
 @RestController
